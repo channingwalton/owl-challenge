@@ -14,5 +14,6 @@ scalacOptions in Test ++= Seq("-Yrangepos")
 
 libraryDependencies ++= Seq (
   "org.scalaz" %% "scalaz-core" % "7.1.3",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"
 )
