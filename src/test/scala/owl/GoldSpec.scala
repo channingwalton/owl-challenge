@@ -1,24 +1,28 @@
 package owl
 
-import org.scalacheck.{Gen, Arbitrary}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Inspectors, FlatSpec, MustMatchers}
+import org.scalatest.{FlatSpec, Inspectors, MustMatchers}
 import owl.Expression._
 
-class GoldSpec extends FlatSpec with Gold with GeneratorDrivenPropertyChecks with MustMatchers with Inspectors {
+class GoldSpec extends FlatSpec with Gold with MustMatchers with Inspectors {
 
-  val genSqrt: Gen[Equation] = Gen.sized { sz =>
-    Gen.fromOption(sqrtExpression)
-  }
-
-  implicit def sqrtArb: Arbitrary[Equation] = Arbitrary(genSqrt)
+  val samples: Int = 100
 
   "sqrtExpression" must "have reasonable values" in {
-    forAll { (exp: Equation) ⇒
-      forAll(allValues(exp)) { i ⇒
-        i must be >= 0
-        i must be <= 144
-      }
+    values(sqrtExpression) { i ⇒
+      i must be >= 0
+      i must be <= 144
     }
   }
+
+  "balancedExpression" must "have reasonable values" in {
+    values(balanced) { i ⇒
+      i must be >= 0
+      i must be <= 144
+    }
+  }
+
+  def values(f: ⇒ Option[Equation])(check: Int ⇒ Unit): Unit =
+    forAll(set(f)) { exp ⇒ forAll(allValues(exp))(check) }
+
+  def set(f: ⇒ Option[Equation]): Set[Equation] = gen(samples, f)
 }
