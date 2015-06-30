@@ -9,16 +9,19 @@ class GoldSpec extends FlatSpec with Gold with MustMatchers with Inspectors {
 
   "sqrtExpression" must "have reasonable values" in {
     values(sqrtExpression) { i ⇒
-      i must be >= 0
-      i must be <= 144
+      withinReasonableRange(i)
     }
   }
 
   "balancedExpression" must "have reasonable values" in {
     values(balanced) { i ⇒
-      i must be >= 0
-      i must be <= 144
+      withinReasonableRange(i)
     }
+  }
+
+  def withinReasonableRange(i: Int): Unit = {
+    i must be >= 0
+    i must be <= 144
   }
 
   def values(f: ⇒ Option[Equation])(check: Int ⇒ Unit): Unit =
