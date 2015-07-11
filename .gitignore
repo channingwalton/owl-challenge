@@ -18,3 +18,9 @@ project/plugins/project/
 
 # Intellij
 .idea
+
+# Latex stuff
+.aux
+.log
+.tex
+owl.pdf

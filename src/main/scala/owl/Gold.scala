@@ -91,7 +91,7 @@ trait Gold {
     right.map(v ⇒ Equation(left, v))
   }
 
-  def magMultiplier(maxOrder: Int): Int = math.pow(10, randomInt(maxOrder)).toInt
+  def magMultiplier(maxOrder: Int): Int = math.pow(10d, randomInt(maxOrder).toDouble).toInt
 
   // multiplying tens and hundreds
   def bigMultiply: Option[Equation] = {

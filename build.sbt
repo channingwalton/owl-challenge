@@ -13,11 +13,18 @@ scalacOptions ++= Seq(
   "-Ydelambdafy:method",
   "-Ybackend:GenBCode",
   "-Yopt:l:classpath",
-  "-unchecked",
   "-deprecation",
+  "-encoding", "UTF-8",
+  "-feature",
   "-language:_",
+  "-unchecked",
   "-Xfatal-warnings",
-  "-Xlint")
+  "-Xlint",
+  "-Yno-adapted-args",
+  "-Ywarn-dead-code",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard",
+  "-Xfuture")
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 

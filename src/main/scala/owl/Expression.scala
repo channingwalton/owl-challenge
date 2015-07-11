@@ -72,8 +72,8 @@ object Expression {
           dividend ← evaluate(l)
         } yield dividend / divisor
       case FractionOf(n, d, v) ⇒ evaluate(v).map(_ * n / d)
-      case Power(x, p) ⇒ evaluate(x).map(v ⇒ math.pow(v, p).toInt)
-      case Sqrt(v) ⇒ evaluate(v).map(math.sqrt(_).toInt)
+      case Power(x, p) ⇒ evaluate(x).map(v ⇒ math.pow(v.toDouble, p.toDouble).toInt)
+      case Sqrt(v) ⇒ evaluate(v).map(d ⇒ math.sqrt(d.toDouble).toInt)
       case Blank ⇒ None
     }
 
