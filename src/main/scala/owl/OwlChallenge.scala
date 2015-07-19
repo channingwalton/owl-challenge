@@ -3,6 +3,8 @@ package owl
 import java.io._
 import sys.process._
 
+import Expression._
+
 /**
  * This code expects pdflatex to be on the path
  */
@@ -10,9 +12,12 @@ object OwlChallenge extends Silver with Gold with App {
 
   val nColumns: Int = 2
   val colWidth: Int = 30
-  private val equations: List[Equation] = goldTest.toList
 
-  write(equations, "owl")
+  val answers = goldTest.toList
+  val challenge = answers flatMap genProblem
+
+  write(answers, "owl-answers")
+  write(challenge, "owl-challenge")
 
   def write(equations: List[Equation], filename: String) = {
     val writer = new PrintWriter(s"$filename.tex", "UTF-8")

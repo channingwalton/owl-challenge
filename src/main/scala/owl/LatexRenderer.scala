@@ -51,12 +51,14 @@ object LatexRenderer {
 
   def tableBody(eqs: Iterable[Equation]) = eqs.zipWithIndex.grouped(2).map(rows).mkString(nl)
 
-  def rows(l: Iterable[(Equation, Int)]) = tableRow(l.flatMap( row )) + """ \\ \hline"""
+  def rows(l: Iterable[(Equation, Int)]) = tableRow(l.map( row )) + """ \\ \hline"""
 
-  def row(t: (Equation, Int)): Option[String] = renderEquation(t._1).map(eq ⇒ tableRow(Seq((t._2 + 1) + ".", eq, "")))
+  def row(t: (Equation, Int)): String = {
+    val eq = renderEquation(t._1)
+    tableRow(Seq((t._2 + 1) + ".", eq, ""))
+  }
 
-  def renderEquation(eq: Equation): Option[String] =
-    genProblem(eq).map(p ⇒ "$" + render(p.l) + " = " + render(p.r) + "$")
+  def renderEquation(eq: Equation): String = "$" + render(eq.l) + " = " + render(eq.r) + "$"
 
   def render(e: Expression): String =
     e match {
