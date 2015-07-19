@@ -1,6 +1,6 @@
 organization := "channing"
 
-name := "pwl-challenge"
+name := "owl-challenge"
 
 version := "0.0.1"
 
@@ -27,6 +27,8 @@ scalacOptions ++= Seq(
   "-Xfuture")
 
 scalacOptions in Test ++= Seq("-Yrangepos")
+
+mainClass in Compile := Some("owl.OwlChallenge")
 
 libraryDependencies ++= Seq (
   "org.scala-lang.modules" %% "scala-java8-compat" % "0.5.0" % "compile",
