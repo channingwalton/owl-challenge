@@ -4,15 +4,21 @@ import scalaz.syntax.applicative._
 import scalaz.std.option._
 
 sealed trait Expression extends Serializable with Product
+
 case class Value(i: Int) extends Expression
 case object Blank extends Expression
-case class Add(l: Expression, r: Expression) extends Expression
-case class Multiply(l: Expression, r: Expression) extends Expression
-case class Minus(l: Expression, r: Expression) extends Expression
-case class Divide(l: Expression, r: Expression) extends Expression
 case class FractionOf(n: Int, d: Int, e: Expression) extends Expression
 case class Sqrt(e: Expression) extends Expression
 case class Power(e: Expression, exp: Int) extends Expression
+
+trait BinaryExpression extends Expression {
+  def l: Expression
+  def r: Expression
+}
+case class Add(l: Expression, r: Expression) extends Expression with BinaryExpression
+case class Multiply(l: Expression, r: Expression) extends Expression with BinaryExpression
+case class Minus(l: Expression, r: Expression) extends Expression with BinaryExpression
+case class Divide(l: Expression, r: Expression) extends Expression with BinaryExpression
 
 case class Equation(l: Expression, r: Expression)
 
@@ -22,6 +28,7 @@ object Expression {
 
   val blank = "?"
   val maxValue: Int = 12
+  val maxReasonableValue: Int = 144
   val maxMinus: Int = 100
 
   def genProblem(eq: Equation): Option[Equation] = if (hasBlank(eq)) Option(eq) else insertBlank(eq)
@@ -50,10 +57,13 @@ object Expression {
     expression match {
       case v: Value ⇒ 3
       case Blank ⇒ 3
-      case a: Add ⇒ 1
-      case m: Minus ⇒ 1
-      case m: Multiply ⇒ 2
-      case d: Divide ⇒ 2
+      case bin: BinaryExpression ⇒
+        bin match {
+          case a: Add ⇒ 1
+          case m: Minus ⇒ 1
+          case m: Multiply ⇒ 2
+          case d: Divide ⇒ 2
+        }
       case h: FractionOf ⇒ 2
       case s: Sqrt ⇒ 3
       case p: Power ⇒ 3
@@ -62,15 +72,17 @@ object Expression {
   def evaluate(e: Expression): Option[Int] =
     e match {
       case Value(i) ⇒ Some(i)
-      case Add(l, r) ⇒ evaluateBinary(l, r, _ + _)
-      case Minus(l, r) ⇒ evaluateBinary(l, r, _ - _)
-      case Multiply(l, r) ⇒ evaluateBinary(l, r, _ * _)
-      case Divide(l, r) ⇒
-        for {
-          divisor ← evaluate(r)
-          if divisor > 0
-          dividend ← evaluate(l)
-        } yield dividend / divisor
+      case bin: BinaryExpression ⇒ bin match {
+        case Add(l, r) ⇒ evaluateBinary(l, r, _ + _)
+        case Minus(l, r) ⇒ evaluateBinary(l, r, _ - _)
+        case Multiply(l, r) ⇒ evaluateBinary(l, r, _ * _)
+        case Divide(l, r) ⇒
+          for {
+            divisor ← evaluate(r)
+            if divisor > 0
+            dividend ← evaluate(l)
+          } yield dividend / divisor
+      }
       case FractionOf(n, d, v) ⇒ evaluate(v).map(_ * n / d)
       case Power(x, p) ⇒ evaluate(x).map(v ⇒ math.pow(v.toDouble, p.toDouble).toInt)
       case Sqrt(v) ⇒ evaluate(v).map(d ⇒ math.sqrt(d.toDouble).toInt)
@@ -84,10 +96,13 @@ object Expression {
     } yield op(lv, rv)
 
   def depth(e: Expression): Int = e match {
-    case Add(a1, a2) ⇒ binDepth(a1, a2)
-    case Multiply(a1, a2) ⇒ binDepth(a1, a2)
-    case Minus(a1, a2) ⇒ binDepth(a1, a2)
-    case Divide(a1, a2) ⇒ binDepth(a1, a2)
+    case bin: BinaryExpression ⇒
+      bin match {
+        case Add(a1, a2) ⇒ binDepth(a1, a2)
+        case Multiply(a1, a2) ⇒ binDepth(a1, a2)
+        case Minus(a1, a2) ⇒ binDepth(a1, a2)
+        case Divide(a1, a2) ⇒ binDepth(a1, a2)
+      }
     case Sqrt(v) ⇒ 1 + depth(v)
     case Power(v, p) ⇒ 1 + depth(v)
     case _ ⇒ 1
@@ -108,10 +123,13 @@ object Expression {
       exp match {
         case v: Value ⇒ count + 1
         case Blank ⇒ 0
-        case Add(a, b) ⇒ cv(a, count) + cv(b, count)
-        case Minus(a, b) ⇒ cv(a, count) + cv(b, count)
-        case Multiply(a, b) ⇒ cv(a, count) + cv(b, count)
-        case Divide(a, b) ⇒ cv(a, count) + cv(b, count)
+        case bin: BinaryExpression ⇒
+          bin match {
+            case Add(a, b) ⇒ cv(a, count) + cv(b, count)
+            case Minus(a, b) ⇒ cv(a, count) + cv(b, count)
+            case Multiply(a, b) ⇒ cv(a, count) + cv(b, count)
+            case Divide(a, b) ⇒ cv(a, count) + cv(b, count)
+          }
         case FractionOf(_, _, v) ⇒ cv(v, count)
         case Sqrt(v) ⇒ cv(v, count)
         case Power(v, _) ⇒ cv(v, count)
@@ -126,22 +144,25 @@ object Expression {
         case v: Value if nth == 0 ⇒ (replacement(v), -1)
         case v: Value ⇒ (Option(v), nth - 1)
         case Blank ⇒ (Option(Blank), -1)
-        case Add(a, b) ⇒
-          val (l, c) = bn(a, nth)
-          val (r, nc) = bn(b, c)
-          ((l |@| r)((x, y) ⇒ Add(x, y)), nc)
-        case Minus(a, b) ⇒
-          val (l, c) = bn(a, nth)
-          val (r, nc) = bn(b, c)
-          ((l |@| r)((x, y) ⇒ Minus(x, y)), nc)
-        case Multiply(a, b) ⇒
-          val (l, c) = bn(a, nth)
-          val (r, nc) = bn(b, c)
-          ((l |@| r)((x, y) ⇒ Multiply(x, y)), nc)
-        case Divide(a, b) ⇒
-          val (l, c) = bn(a, nth)
-          val (r, nc) = bn(b, c)
-          ((l |@| r)((x, y) ⇒ Divide(x, y)), nc)
+        case bin: BinaryExpression ⇒
+          bin match {
+            case Add(a, b) ⇒
+              val (l, c) = bn(a, nth)
+              val (r, nc) = bn(b, c)
+              ((l |@| r)((x, y) ⇒ Add(x, y)), nc)
+            case Minus(a, b) ⇒
+              val (l, c) = bn(a, nth)
+              val (r, nc) = bn(b, c)
+              ((l |@| r)((x, y) ⇒ Minus(x, y)), nc)
+            case Multiply(a, b) ⇒
+              val (l, c) = bn(a, nth)
+              val (r, nc) = bn(b, c)
+              ((l |@| r)((x, y) ⇒ Multiply(x, y)), nc)
+            case Divide(a, b) ⇒
+              val (l, c) = bn(a, nth)
+              val (r, nc) = bn(b, c)
+              ((l |@| r)((x, y) ⇒ Divide(x, y)), nc)
+          }
         case FractionOf(_, _, v) ⇒ bn(v, nth)
         case Sqrt(v) ⇒
           val (a, b) = bn(v, nth)
@@ -166,10 +187,13 @@ object Expression {
   def hasBlank(e: Expression): Boolean = e match {
     case v:Value ⇒ false
     case Blank ⇒ true
-    case Add(a, b) ⇒ hasBlank(a) || hasBlank(b)
-    case Minus(a, b) ⇒ hasBlank(a) || hasBlank(b)
-    case Multiply(a, b) ⇒ hasBlank(a) || hasBlank(b)
-    case Divide(a, b) ⇒ hasBlank(a) || hasBlank(b)
+    case bin: BinaryExpression ⇒
+      bin match {
+        case Add(a, b) ⇒ hasBlank(a) || hasBlank(b)
+        case Minus(a, b) ⇒ hasBlank(a) || hasBlank(b)
+        case Multiply(a, b) ⇒ hasBlank(a) || hasBlank(b)
+        case Divide(a, b) ⇒ hasBlank(a) || hasBlank(b)
+      }
     case FractionOf(_, _, v) ⇒ hasBlank(v)
     case Sqrt(v) ⇒ hasBlank(v)
     case Power(v, _) ⇒ hasBlank(v)
@@ -180,10 +204,13 @@ object Expression {
       exp match {
         case v: Value ⇒ math.max(v.i, m)
         case Blank ⇒ m
-        case Add(a, b) ⇒ max(a, m) + max(b, m)
-        case Minus(a, b) ⇒ max(a, m) + max(b, m)
-        case Multiply(a, b) ⇒ max(a, m) + max(b, m)
-        case Divide(a, b) ⇒ max(a, m) + max(b, m)
+        case bin: BinaryExpression ⇒
+          bin match {
+            case Add(a, b) ⇒ max(a, m) + max(b, m)
+            case Minus(a, b) ⇒ max(a, m) + max(b, m)
+            case Multiply(a, b) ⇒ max(a, m) + max(b, m)
+            case Divide(a, b) ⇒ max(a, m) + max(b, m)
+          }
         case FractionOf(_, _, v) ⇒ max(v, m)
         case Sqrt(v) ⇒ max(v, m)
         case Power(v, _) ⇒ max(v, m)
@@ -197,12 +224,20 @@ object Expression {
       e match {
         case v: Value ⇒ Set(v.i)
         case Blank ⇒ Set.empty[Int]
-        case Add(a, b) ⇒ allValues(a) ++ allValues(b)
-        case Minus(a, b) ⇒ allValues(a) ++ allValues(b)
-        case Multiply(a, b) ⇒ allValues(a) ++ allValues(b)
-        case Divide(a, b) ⇒ allValues(a) ++ allValues(b)
+        case bin: BinaryExpression ⇒
+          bin match {
+            case Add(a, b) ⇒ allValues(a) ++ allValues(b)
+            case Minus(a, b) ⇒ allValues(a) ++ allValues(b)
+            case Multiply(a, b) ⇒ allValues(a) ++ allValues(b)
+            case Divide(a, b) ⇒ allValues(a) ++ allValues(b)
+          }
         case FractionOf(_, _, v) ⇒ allValues(v)
         case Sqrt(v) ⇒ allValues(v)
         case Power(v, _) ⇒ allValues(v)
       }
+
+  def hasReasonableValues(e: Equation): Boolean = {
+    val all = allValues(e)
+    all.min >= 0 && all.max <= maxReasonableValue
+  }
 }

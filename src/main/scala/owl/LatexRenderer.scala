@@ -64,10 +64,13 @@ object LatexRenderer {
     e match {
       case Value(i) ⇒ i.toString
       case Blank ⇒ "\\text{?}"
-      case Add(l, r) ⇒ renderBinary("+", e, l, r)
-      case Minus(l, r) ⇒ renderBinary("-", e, l, r)
-      case Multiply(l, r) ⇒ renderBinary(times, e, l, r)
-      case Divide(l, r) ⇒ renderBinary(divide, e, l, r)
+      case bin: BinaryExpression ⇒
+        bin match {
+          case Add(l, r) ⇒ renderBinary("+", e, l, r)
+          case Minus(l, r) ⇒ renderBinary("-", e, l, r)
+          case Multiply(l, r) ⇒ renderBinary(times, e, l, r)
+          case Divide(l, r) ⇒ renderBinary(divide, e, l, r)
+        }
       case FractionOf(n, d, exp) ⇒
         val r = render(exp)
         val bracketed = bracket(r, precedence(e) > precedence(exp))

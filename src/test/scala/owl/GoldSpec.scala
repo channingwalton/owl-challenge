@@ -19,13 +19,20 @@ class GoldSpec extends FlatSpec with Gold with MustMatchers with Inspectors {
     }
   }
 
+  "tripleExpression" must "have reasonable values" in {
+    values(triple) { i ⇒
+      withinReasonableRange(i)
+    }
+  }
+
   def withinReasonableRange(i: Int): Unit = {
     i must be >= 0
     i must be <= 144
   }
 
   def values(f: ⇒ Option[Equation])(check: Int ⇒ Unit): Unit =
-    forAll(set(f)) { exp ⇒ forAll(allValues(exp))(check) }
+    forAll(set(f)) { exp ⇒
+      forAll(allValues(exp))(check) }
 
   def set(f: ⇒ Option[Equation]): Set[Equation] = gen(samples, f)
 }

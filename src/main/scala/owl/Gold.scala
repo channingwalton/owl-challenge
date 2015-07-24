@@ -84,11 +84,30 @@ trait Gold {
 
     Option(Equation(FractionOf(a, b, c), Blank))
   }
-
+  // Divide(Divide(432,6),9) = 8
   def triple: Option[Equation] = {
-    val left = aBinary(genBinary(randomInt(4) - 1)(), randomValue())
-    val right = evaluate(left).filter(_ >= 0)
-    right.map(v ⇒ Equation(left, v))
+    // a op b = c
+    val outer = binaryExpression
+    val leftValue = evaluate(outer.l)
+
+    // d op e = a
+    val inner = leftValue.map(binaryExpressionEqualTo(_))
+
+    inner.flatMap { in ⇒
+      // substitute (d op e) for a giving ((d op e) op b) = c
+      val expression = outer match {
+        case Add(a, b) ⇒ Add(in, b)
+        case Minus(a, b) ⇒ Minus(in, b)
+        case Multiply(a, b) ⇒ Multiply(in, b)
+        case Divide(a, b) ⇒ Divide(in, b)
+      }
+
+      for {
+        result ← evaluate(expression)
+        equation = Equation(expression, result)
+        if hasReasonableValues(equation)
+      } yield equation
+    }
   }
 
   def magMultiplier(maxOrder: Int): Int = math.pow(10d, randomInt(maxOrder).toDouble).toInt
@@ -115,11 +134,11 @@ trait Gold {
 
   def aBinary = binaries(randomInt(binaries.size) - 1)
 
-  val genBinary: List[() ⇒ Expression] = List(add, multiply, divide, minus)
+  val genBinary: List[() ⇒ BinaryExpression] = List(add, multiply, divide, minus)
 
-  val genBinaryFromValue: List[Value ⇒ Expression] = List(addEqualToValue, multiplyEqualToValue, divideEqualToValue, minusEqualToValue)
+  val genBinaryFromValue: List[Value ⇒ BinaryExpression] = List(addEqualToValue, multiplyEqualToValue, divideEqualToValue, minusEqualToValue)
 
-  def add(): Expression = Add(randomValue(), randomValue())
+  def add(): Add = Add(randomValue(), randomValue())
 
   def addEqualToValue(v: Value) = {
     val x = randomInt(v.i)
@@ -127,7 +146,7 @@ trait Gold {
     choose(Add(x, y), Add(y, x))
   }
 
-  def multiply(): Expression = Multiply(randomInt(), randomInt())
+  def multiply(): Multiply = Multiply(randomInt(), randomInt())
 
   def multiplyEqualToValue(v: Value): Multiply = {
     val fs = factors(v.i)
@@ -136,7 +155,7 @@ trait Gold {
     choose(Multiply(d, y), Multiply(y, d))
   }
 
-  def divide(): Expression = {
+  def divide(): Divide = {
     val a = randomInt()
     val b = randomInt()
     val c = a * b
@@ -144,13 +163,13 @@ trait Gold {
     Divide(c, choose(a, b))
   }
 
-  def divideEqualToValue(v: Value): Expression = {
+  def divideEqualToValue(v: Value): Divide = {
     val x = randomInt(6)
     val y = x * v.i
     Divide(y, x)
   }
 
-  def minus(): Expression = {
+  def minus(): Minus = {
     val a = randomInt()
     val b = randomInt()
     val c = a + b
@@ -158,7 +177,7 @@ trait Gold {
     Minus(c, choose(a, b))
   }
 
-  def minusEqualToValue(v: Value): Expression = {
+  def minusEqualToValue(v: Value): Minus = {
     val x = randomInt(10)
     Minus(x + v.i, x)
   }
@@ -167,8 +186,8 @@ trait Gold {
 
   def randomBinaryFromValueGenerator = (math.random * genBinaryFromValue.size).toInt
 
-  def binaryExpression: Expression = genBinary(randomBinaryGenerator)()
+  def binaryExpression: BinaryExpression = genBinary(randomBinaryGenerator)()
 
-  def binaryExpressionEqualTo(v: Value): Expression = genBinaryFromValue(randomBinaryFromValueGenerator)(v)
+  def binaryExpressionEqualTo(v: Value): BinaryExpression = genBinaryFromValue(randomBinaryFromValueGenerator)(v)
 
 }
