@@ -13,10 +13,7 @@ object OwlChallenge extends Silver with Gold with App {
   val nColumns: Int = 2
   val colWidth: Int = 30
 
-  val answers = goldTest.toList
-  val challenge = answers flatMap genProblem
-
-  write(answers, "owl-answers")
+  val challenge = goldTest.toList flatMap insertBlank
   write(challenge, "owl-challenge")
 
   def write(equations: List[Equation], filename: String) = {
