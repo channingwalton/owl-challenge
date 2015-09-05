@@ -16,11 +16,10 @@ object OwlChallenge extends Silver with Gold with App {
   val answers = goldTest.toList
   val challenge = answers flatMap genProblem
 
-  write(answers, "owl-answers")
   write(challenge, "owl-challenge")
 
   def write(equations: List[Equation], filename: String) = {
-    val writer = new PrintWriter(s"$filename.tex", "UTF-8")
+    val writer = new PrintWriter(s"target/$filename.tex", "UTF-8")
     writer.print(LatexRenderer(equations))
     writer.flush()
     writer.close()
