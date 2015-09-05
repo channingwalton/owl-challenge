@@ -6,27 +6,18 @@ import scalaz.std.option._
 sealed trait Expression extends Serializable with Product
 
 case class Value(i: Int) extends Expression
-
 case object Blank extends Expression
-
 case class FractionOf(n: Int, d: Int, e: Expression) extends Expression
-
 case class Sqrt(e: Expression) extends Expression
-
 case class Power(e: Expression, exp: Int) extends Expression
 
 trait BinaryExpression extends Expression {
   def l: Expression
-
   def r: Expression
 }
-
 case class Add(l: Expression, r: Expression) extends Expression with BinaryExpression
-
 case class Multiply(l: Expression, r: Expression) extends Expression with BinaryExpression
-
 case class Minus(l: Expression, r: Expression) extends Expression with BinaryExpression
-
 case class Divide(l: Expression, r: Expression) extends Expression with BinaryExpression
 
 case class Equation(l: Expression, r: Expression)
@@ -39,6 +30,8 @@ object Expression {
   val maxValue: Int = 12
   val maxReasonableValue: Int = 144
   val maxMinus: Int = 100
+
+  def genProblem(eq: Equation): Option[Equation] = if (hasBlank(eq)) Option(eq) else insertBlank(eq)
 
   def randomInt(upper: Int = maxValue) = (math.random * upper).toInt + 1
 
@@ -192,7 +185,7 @@ object Expression {
   def hasBlank(e: Equation): Boolean = hasBlank(e.l) || hasBlank(e.r)
 
   def hasBlank(e: Expression): Boolean = e match {
-    case v: Value ⇒ false
+    case v:Value ⇒ false
     case Blank ⇒ true
     case bin: BinaryExpression ⇒
       bin match {
@@ -228,20 +221,20 @@ object Expression {
   def allValues(e: Equation): Set[Int] = allValues(e.l) ++ allValues(e.r)
 
   def allValues(e: Expression): Set[Int] =
-    e match {
-      case v: Value ⇒ Set(v.i)
-      case Blank ⇒ Set.empty[Int]
-      case bin: BinaryExpression ⇒
-        bin match {
-          case Add(a, b) ⇒ allValues(a) ++ allValues(b)
-          case Minus(a, b) ⇒ allValues(a) ++ allValues(b)
-          case Multiply(a, b) ⇒ allValues(a) ++ allValues(b)
-          case Divide(a, b) ⇒ allValues(a) ++ allValues(b)
-        }
-      case FractionOf(_, _, v) ⇒ allValues(v)
-      case Sqrt(v) ⇒ allValues(v)
-      case Power(v, _) ⇒ allValues(v)
-    }
+      e match {
+        case v: Value ⇒ Set(v.i)
+        case Blank ⇒ Set.empty[Int]
+        case bin: BinaryExpression ⇒
+          bin match {
+            case Add(a, b) ⇒ allValues(a) ++ allValues(b)
+            case Minus(a, b) ⇒ allValues(a) ++ allValues(b)
+            case Multiply(a, b) ⇒ allValues(a) ++ allValues(b)
+            case Divide(a, b) ⇒ allValues(a) ++ allValues(b)
+          }
+        case FractionOf(_, _, v) ⇒ allValues(v)
+        case Sqrt(v) ⇒ allValues(v)
+        case Power(v, _) ⇒ allValues(v)
+      }
 
   def hasReasonableValues(e: Equation): Boolean = {
     val all = allValues(e)
