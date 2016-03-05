@@ -24,7 +24,7 @@ trait Gold {
       gen(3, fractions) ++
       gen(3, tripleProduct) ++
       gen(3, tripleDivideEq) ++
-      gen(2, tripleSquaresDifference) ++
+      gen(2, tripleDifferenceOfSquares) ++
       gen(2, quadrupleProduct) ++
       gen(2, sqrtExpression)
 
@@ -51,7 +51,7 @@ trait Gold {
   }
 
   // a^2 - b^2 - c^2 = ?
-  def tripleSquaresDifference: Option[Equation] = {
+  def tripleDifferenceOfSquares: Option[Equation] = {
     val a = randomInt(3)
     val b = a + randomInt(3)
     val c = b + randomInt(3)

@@ -24,6 +24,6 @@ object OwlChallenge extends Silver with Gold with App {
     writer.flush()
     writer.close()
 
-    s"pdflatex $filename.tex" #&& s"open $filename.pdf" !
+    s"pdflatex target/$filename.tex" #&& s"open $filename.pdf" !
   }
 }
