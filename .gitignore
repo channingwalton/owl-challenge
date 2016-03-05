@@ -19,8 +19,13 @@ project/plugins/project/
 # Intellij
 .idea
 
+# Ensime
+.ensime*
+
 # Latex stuff
-.aux
-.log
-.tex
-owl.pdf
+*.aux
+*.tex
+owl-challenge.pdf
+
+# Other
+*.log
