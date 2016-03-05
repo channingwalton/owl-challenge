@@ -1,7 +1,7 @@
 package owl
 
-import scalaz.syntax.applicative._
-import scalaz.std.option._
+import cats.syntax.cartesian._
+import cats.std.option._
 
 sealed trait Expression extends Serializable with Product
 
@@ -149,19 +149,19 @@ object Expression {
             case Add(a, b) ⇒
               val (l, c) = bn(a, nth)
               val (r, nc) = bn(b, c)
-              ((l |@| r)((x, y) ⇒ Add(x, y)), nc)
+              ((l |@| r) map ((x, y) ⇒ Add(x, y)), nc)
             case Minus(a, b) ⇒
               val (l, c) = bn(a, nth)
               val (r, nc) = bn(b, c)
-              ((l |@| r)((x, y) ⇒ Minus(x, y)), nc)
+              ((l |@| r) map ((x, y) ⇒ Minus(x, y)), nc)
             case Multiply(a, b) ⇒
               val (l, c) = bn(a, nth)
               val (r, nc) = bn(b, c)
-              ((l |@| r)((x, y) ⇒ Multiply(x, y)), nc)
+              ((l |@| r) map ((x, y) ⇒ Multiply(x, y)), nc)
             case Divide(a, b) ⇒
               val (l, c) = bn(a, nth)
               val (r, nc) = bn(b, c)
-              ((l |@| r)((x, y) ⇒ Divide(x, y)), nc)
+              ((l |@| r) map ((x, y) ⇒ Divide(x, y)), nc)
           }
         case FractionOf(_, _, v) ⇒ bn(v, nth)
         case Sqrt(v) ⇒

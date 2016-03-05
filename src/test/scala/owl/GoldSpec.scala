@@ -5,7 +5,7 @@ import owl.Expression._
 
 class GoldSpec extends FlatSpec with Gold with MustMatchers with Inspectors {
 
-  val samples: Int = 100
+  val samples: Int = 1000
 
   "sqrtExpression" must "have reasonable values" in {
     values(sqrtExpression) { i ⇒
@@ -32,7 +32,9 @@ class GoldSpec extends FlatSpec with Gold with MustMatchers with Inspectors {
 
   def values(f: ⇒ Option[Equation])(check: Int ⇒ Unit): Unit =
     forAll(set(f)) { exp ⇒
-      forAll(allValues(exp))(check) }
+      val vals= allValues(exp)
+      vals.size must be > 0
+      forAll(vals)(check) }
 
   def set(f: ⇒ Option[Equation]): Set[Equation] = gen(samples, f)
 }

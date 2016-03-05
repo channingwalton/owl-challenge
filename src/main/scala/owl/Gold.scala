@@ -84,7 +84,8 @@ trait Gold {
 
     Option(Equation(FractionOf(a, b, c), Blank))
   }
-  // Divide(Divide(432,6),9) = 8
+
+  // Op1(Op2(x,y),z) = a
   def triple: Option[Equation] = {
     // a op b = c
     val outer = binaryExpression
