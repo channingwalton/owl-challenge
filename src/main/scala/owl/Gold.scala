@@ -127,7 +127,7 @@ trait Gold {
     val right = value.map(n ⇒ binaryExpressionEqualTo(n))
     for {
       r ← right
-      if math.max(maxValueIn(left), maxValueIn(r)) < maxValue * maxValue
+      if math.max(maxValueIn(left), maxValueIn(r)) < maxArgumentValue * maxArgumentValue
     } yield Equation(left, r)
   }
 

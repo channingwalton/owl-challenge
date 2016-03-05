@@ -27,18 +27,18 @@ object Expression {
   implicit def toValue(x: Int): Value = Value(x)
 
   val blank = "?"
-  val maxValue: Int = 12
+  val maxArgumentValue: Int = 12
   val maxReasonableValue: Int = 144
-  val maxMinus: Int = 100
+  val maxMinusArgument: Int = 100
 
   def genProblem(eq: Equation): Option[Equation] = if (hasBlank(eq)) Option(eq) else insertBlank(eq)
 
-  def randomInt(upper: Int = maxValue) = (math.random * upper).toInt + 1
+  def randomInt(upper: Int = maxArgumentValue) = (math.random * upper).toInt + 1
 
-  def randomValue(upper: Int = maxValue): Value = Value(randomInt(upper))
+  def randomValue(upper: Int = maxArgumentValue): Value = Value(randomInt(upper))
 
   def simpleMinus: Expression = {
-    val (l, r) = (randomInt(maxMinus), randomInt(maxMinus))
+    val (l, r) = (randomInt(maxMinusArgument), randomInt(maxMinusArgument))
     if (l > r) Minus(Value(l), Value(r)) else Minus(Value(r), Value(l))
   }
 
